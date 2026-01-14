@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Graduation Project | Login</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+    /* Prevent default browser password reveal icon to use our custom one */
+    input::-ms-reveal, input::-ms-clear { display: none !important; }
+
+    body {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        background: linear-gradient(to bottom, #e6f3ff, #f7f9fc);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+    }
+
+    .login-container {
+        background-color: #fff;
+        border-radius: 20px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        width: 95%;
+        max-width: 400px;
+        padding: 30px 20px;
+        text-align: center;
+        box-sizing: border-box; 
+    }
+
+    .graduation-cap { width: 100px; margin-bottom: -30px; }
+    .login-form h1 { font-size: 22px; color: #1a237e; margin-bottom: 10px; }
+    .login-form p { font-size: 14px; color: #555; margin-bottom: 20px; }
+    .input-group { margin-bottom: 18px; text-align: left; }
+    .input-label { display: flex; align-items: center; font-size: 14px; color: #1a237e; margin-bottom: 6px; gap: 6px; font-weight: 600; }
+
+    .input-with-icon { position: relative; width: 100%; box-sizing: border-box; }
+    .input-with-icon input {
+        width: 100%; padding: 10px 40px 10px 12px; 
+        border: 1px solid #ccc; border-radius: 8px;
+        font-size: 14px; outline: none; height: 40px;
+        box-sizing: border-box; transition: 0.3s;
+    }
+
+    .input-with-icon .inside-icon {
+        position: absolute; top: 50%; right: 12px; 
+        transform: translateY(-50%); font-size: 16px; color: #888;
+    }
+
+    .eye-clickable { cursor: pointer; color: #1a237e !important; }
+
+    .error-msg {
+        color: #d32f2f; font-size: 11px; margin-top: 5px;
+        display: none; font-weight: 500;
+    }
+
+    .form-footer { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .forgot-password a { color: #1a237e; text-decoration: none; font-size: 12px; }
+    .remember-me { display: flex; align-items: center; font-size: 13px; color: #555; }
+
+    .login-btn {
+        width: 100%; padding: 12px; background-color: #1a237e;
+        color: #fff; font-size: 15px; border: none; border-radius: 8px;
+        cursor: pointer; transition: 0.3s; font-weight: bold;
+    }
+
+    .login-btn:hover:not(:disabled) { background-color: #0d1452; }
+
+    /* Styling for the disabled state of the button */
+    .login-btn:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+
+    footer { margin-top: 15px; font-size: 11px; color: #aaa; }
+</style>
+</head>
+<body>
+
+<div class="login-container">
+    <img src="https://i.postimg.cc/SxXx9DRT/Whats-App-Image-2025-12-24-at-11-49-04-PM.jpg" alt="Logo" class="graduation-cap">
+    <div class="login-form">
+        <h1>Welcome to Your Graduation Journey!</h1>
+        <p>Your next step to graduation!</p>
+        <form id="loginForm">
+            <div class="input-group">
+                <label class="input-label"><i class="fas fa-envelope"></i> Email Address</label>
+                <div class="input-with-icon">
+                    <i class="fas fa-user inside-icon"></i>
+                    <input type="email" id="email" placeholder="Enter your Email" >
+                </div>
+                <div id="email-error" class="error-msg">
+                    <i class="fas fa-exclamation-circle"></i> Invalid email domain for login.
+                </div>
+            </div>
+            <div class="input-group">
+                <label class="input-label"><i class="fas fa-lock"></i> Password</label>
+                <div class="input-with-icon">
+                    <i class="fas fa-lock inside-icon" id="passIcon"></i>
+                    <input type="password" id="password" placeholder="Enter your password" >
+                </div>
+                <div id="password-error" class="error-msg">
+                    <i class="fas fa-exclamation-circle"></i> Password must be 6+ chars.
+                </div>
+            </div>
+            <div class="form-footer">
+                <div class="remember-me">
+                    <input type="checkbox" id="remember">
+                    <label for="remember" style="margin-left: 5px;">Remember Me</label>
+                </div>
+                <div class="forgot-password">
+                    <a href="#" onclick="">Forgot Password?</a>
+                </div>
+            </div>
+            <button type="submit" class="login-btn" id="loginBtn">Login</button>
+        </form>
+    </div>
+    <footer><p>Graduation Project Management System</p></footer>
+</div>
+
+<script src="database.js"></script>
+
+<script>
+    const loginForm = document.getElementById('loginForm');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const emailError = document.getElementById('email-error');
+    const loginBtn = document.getElementById('loginBtn');
+    const passIcon = document.getElementById('passIcon');
+
+    // Configuration for security
+    const MAX_ATTEMPTS = 5;
+    const LOCKOUT_TIME = 10 * 60 * 1000; // 30 minutes
+
+    // Function to check and handle lockout state
+    function checkLockout() {
+        const lockoutEnd = localStorage.getItem('loginLockout');
+        if (lockoutEnd) {
+            const timeLeft = parseInt(lockoutEnd) - Date.now();
+            if (timeLeft > 0) {
+                loginBtn.disabled = true; // Disable the button
+                const minutes = Math.ceil(timeLeft / (60 * 1000));
+                emailError.textContent = `Access blocked. Try again in ${minutes} minutes.`;
+                emailError.style.display = 'block';
+                
+                // Refresh every minute to auto-enable
+                setTimeout(checkLockout, 60000);
+                return true;
+            } else {
+                // Lockout expired
+                loginBtn.disabled = false;
+                localStorage.removeItem('loginLockout');
+                localStorage.setItem('loginAttempts', '0');
+                emailError.style.display = 'none';
+            }
+        }
+        return false;
+    }
+
+    // Run check on page load
+    checkLockout();
+
+   passwordInput.addEventListener('input', function() {
+        const passwordError = document.getElementById('password-error');
+        passwordError.style.display = 'none'; 
+        this.style.borderColor = '#ccc'; 
+    
+
+        if (this.value.length > 0) {
+            passIcon.className = 'fas fa-eye inside-icon eye-clickable';
+        } else {
+            passIcon.className = 'fas fa-lock inside-icon';
+            passwordInput.setAttribute('type', 'password');
+        }
+    });
+
+    passIcon.addEventListener('click', function() {
+        if (this.classList.contains('eye-clickable')) {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        }
+    });
+
+    loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (checkLockout()) return;
+
+        const emailValue = emailInput.value;
+        const passwordValue = passwordInput.value;
+        const passwordError = document.getElementById('password-error');
+        const user = users.find(u => u.email === emailValue && u.password === passwordValue);
+
+ let hasError = false;
+
+        if (!emailValue) {
+            emailError.textContent = "Email address is required.";
+            emailError.style.display = 'block';
+            emailInput.style.borderColor = '#d32f2f';
+            hasError = true;
+        }
+
+        if (!passwordValue) {
+            passwordError.textContent = "Password is required.";
+            passwordError.style.display = 'block';
+            passwordInput.style.borderColor = '#d32f2f';
+            hasError = true;
+        }
+
+        if (hasError) return;
+
+        if (user) {
+            localStorage.setItem('loginAttempts', '0');
+            localStorage.removeItem('loginLockout');
+            localStorage.setItem('userDisplayName', user.name);
+            localStorage.setItem('userRole', user.type);
+            window.location.href = user.type === "student" ? "student_dashboard.html" : "supervisor_dashboard.html";
+        } else {
+            let attempts = parseInt(localStorage.getItem('loginAttempts') || '0') + 1;
+            localStorage.setItem('loginAttempts', attempts);
+
+            if (attempts >= MAX_ATTEMPTS) {
+                const lockoutEnd = Date.now() + LOCKOUT_TIME;
+                localStorage.setItem('loginLockout', lockoutEnd);
+                checkLockout(); // Trigger UI change
+            } else {
+                emailError.textContent = `Incorrect email or password. ${MAX_ATTEMPTS - attempts} attempts left.`;
+                emailError.style.display = 'block';
+            }
+            emailInput.style.borderColor = '#d32f2f';
+            passwordInput.style.borderColor = '#d32f2f';
+        }
+    });
+
+   emailInput.addEventListener('input', () => {
+        if (!loginBtn.disabled) {
+            const passwordError = document.getElementById('password-error'); 
+            emailError.style.display = 'none';
+            passwordError.style.display = 'none'; 
+            emailInput.style.borderColor = '#ccc';
+            passwordInput.style.borderColor = '#ccc';
+        }
+    });
+</script>
+</body>
+</html>
