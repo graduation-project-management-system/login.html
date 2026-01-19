@@ -219,7 +219,7 @@
             localStorage.removeItem('loginLockout');
             localStorage.setItem('userDisplayName', user.name);
             localStorage.setItem('userRole', user.type);
-            window.location.href = user.type === "student" ? "student_dashboard.html" : "supervisor_dashboard.html";
+            window.location.href = user.type === "student" ? "student_dashboard.html" : "Supervisor_dashboard.html";
         } else {
             let attempts = parseInt(localStorage.getItem('loginAttempts') || '0') + 1;
             localStorage.setItem('loginAttempts', attempts);
@@ -248,4 +248,5 @@
     });
 </script>
 </body>
+
 </html>
