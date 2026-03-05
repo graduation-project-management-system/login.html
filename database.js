@@ -119,9 +119,16 @@ const users = [
         password: "Khaldoon0*",
         type: "supervisor",
         name: "Khaldoon"
+    },
+    { 
+        email: "Yahya@just.edu.jo", 
+        password: "Yahya0*",
+        type: "admin",
+        name: "Yahya"
     }
 ];
 
 // Example of using the `users` array to check credentials in a login form
 // This array is a mock of a simple login system, where the user can be a student or supervisor
+
 // In real-world applications, credentials should be securely stored in a database and not hardcoded like this.
